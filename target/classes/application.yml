@@ -1,0 +1,32 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+spring:
+  application:
+    name: yun_picture_backed
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/yun_picture
+    username: root
+    password: Qwer12345
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false # 关闭mybatis驼峰命名法转换
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 输出sql语句
+  global-config:
+    db-config:
+      logic-delete-field: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+## swagger配置
+knife4j:
+  enable: true
+  openapi:
+    title: swagger接口文档
+    version: v0.1
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+            com.waiit.yun_picture_backed.controller
