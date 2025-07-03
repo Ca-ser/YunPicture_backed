@@ -129,6 +129,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
+     * 获取当前登录用户
+     *
+     * @param request 请求
+     * @return 当前登录用户
+     */
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        // 判断是否已经登录
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null || currentUser.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
+        }
+        // 从数据库中查询
+        Long userId = currentUser.getId();
+        currentUser = this.getById(userId);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        return currentUser;
+    }
+
+    /**
      * 获取脱敏后的用户信息
      *
      * @param user 用户信息
@@ -143,6 +166,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         LoginUserVO loginuservo = new LoginUserVO();
         BeanUtil.copyProperties(user, loginuservo);
         return loginuservo;
+    }
+
+    @Override
+    public Boolean userLogout(HttpServletRequest request) {
+        Object userobj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        if (userobj == null) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "用户未登录");
+        }
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+        return true;
     }
 }
 
