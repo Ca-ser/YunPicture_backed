@@ -1,11 +1,15 @@
 package com.waiit.yun_picture_backed.service;
 
-import com.waiit.yun_picture_backed.model.dto.UserRegisterRequest;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.waiit.yun_picture_backed.model.dto.user.UserQueryRequest;
+import com.waiit.yun_picture_backed.model.dto.user.UserRegisterRequest;
 import com.waiit.yun_picture_backed.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.waiit.yun_picture_backed.model.vo.LoginUserVO;
+import com.waiit.yun_picture_backed.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * @author Restart
@@ -48,13 +52,31 @@ public interface UserService extends IService<User> {
     User getLoginUser(HttpServletRequest request);
 
     /**
-     * 获取脱敏后的用户信息
+     * 获取脱敏后的 用户登录信息
      *
      * @param user 用户信息
      * @return 脱敏后的用户信息
      */
 
     LoginUserVO getloginUserVO(User user);
+    
+    
+    /**
+     * 获取脱敏后的用户信息
+     *
+     * @param user 用户信息
+     * @return 脱敏后的用户信息
+     */
+
+    UserVO getUserVO(User user);
+    /**
+     * 获取脱敏后的用户信息列表
+     *
+     * @param userList 用户信息列表
+     * @return 脱敏后的用户信息
+     */
+
+    List<UserVO> getUserVOList(List<User> userList);
 
     /**
      * 用户注销
@@ -62,4 +84,6 @@ public interface UserService extends IService<User> {
      * @return
      * */
      Boolean userLogout(HttpServletRequest request);
+     
+     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 }
