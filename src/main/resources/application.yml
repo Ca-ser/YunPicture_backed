@@ -30,11 +30,11 @@ knife4j:
         api-rule: package
         api-rule-resources:
             com.waiit.yun_picture_backed.controller
-## 对象存储
-cos:
-  clent:
-    host:
-    secretId:
-    secretKey:
-    region:
-    bucket:
+#### 对象存储
+#cos:
+#  clent:
+#    host:
+#    secretId:
+#    secretKey:
+#    region:
+#    bucket:
