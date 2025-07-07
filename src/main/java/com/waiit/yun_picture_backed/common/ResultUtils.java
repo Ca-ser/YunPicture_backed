@@ -10,8 +10,8 @@ public class ResultUtils {
      * @param <T>  数据类型
      * @return 响应
      */
-    public static <T> BasieResponse<T> success(T data) {
-        return new BasieResponse<>(0, data, "ok");
+    public static <T> BaseResponse<T> success(T data) {
+        return new BaseResponse<>(0, data, "ok");
     }
 
     /**
@@ -20,8 +20,8 @@ public class ResultUtils {
      * @param errorCode 错误码
      * @return 响应
      */
-    public static BasieResponse<?> error(ErrorCode errorCode) {
-        return new BasieResponse<>(errorCode);
+    public static BaseResponse<?> error(ErrorCode errorCode) {
+        return new BaseResponse<>(errorCode);
     }
 
     /**
@@ -31,8 +31,8 @@ public class ResultUtils {
      * @param message 错误信息
      * @return 响应
      */
-    public static BasieResponse<?> error(int code, String message) {
-        return new BasieResponse<>(code, null, message);
+    public static BaseResponse<?> error(int code, String message) {
+        return new BaseResponse<>(code, null, message);
     }
 
     /**
@@ -41,8 +41,8 @@ public class ResultUtils {
      * @param errorCode 错误码
      * @return 响应
      */
-    public static BasieResponse<?> error(ErrorCode errorCode, String message) {
-        return new BasieResponse<>(errorCode.getCode(), null, message);
+    public static BaseResponse<?> error(ErrorCode errorCode, String message) {
+        return new BaseResponse<>(errorCode.getCode(), null, message);
     }
     
 }

@@ -1,6 +1,6 @@
 package com.waiit.yun_picture_backed.aop;
 
-import com.waiit.yun_picture_backed.annotation.AuthCHeck;
+import com.waiit.yun_picture_backed.annotation.AuthCheck;
 import com.waiit.yun_picture_backed.exception.BusinessException;
 import com.waiit.yun_picture_backed.exception.ErrorCode;
 import com.waiit.yun_picture_backed.model.entity.User;
@@ -27,7 +27,7 @@ public class AuthInterceptor {
 
 
     @Around("@annotation(autoCheck)")
-    public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCHeck autoCheck) throws Throwable {
+    public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCheck autoCheck) throws Throwable {
         String mustRole = autoCheck.mustRole();
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();

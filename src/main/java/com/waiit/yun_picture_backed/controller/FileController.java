@@ -4,8 +4,8 @@ package com.waiit.yun_picture_backed.controller;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.COSObjectInputStream;
 import com.qcloud.cos.utils.IOUtils;
-import com.waiit.yun_picture_backed.annotation.AuthCHeck;
-import com.waiit.yun_picture_backed.common.BasieResponse;
+import com.waiit.yun_picture_backed.annotation.AuthCheck;
+import com.waiit.yun_picture_backed.common.BaseResponse;
 import com.waiit.yun_picture_backed.common.ResultUtils;
 import com.waiit.yun_picture_backed.constant.UserConstant;
 import com.waiit.yun_picture_backed.exception.BusinessException;
@@ -35,9 +35,9 @@ public class FileController {
     /**
      * 测试上传文件
      */
-    @AuthCHeck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("test/upload")
-    public BasieResponse<String> testUploadFile(@RequestPart("file") MultipartFile multipartFile) {
+    public BaseResponse<String> testUploadFile(@RequestPart("file") MultipartFile multipartFile) {
 
         // 文件目录
         String filename = multipartFile.getOriginalFilename();
@@ -68,12 +68,14 @@ public class FileController {
     /**
      * 测试下载文件
      */
-    @AuthCHeck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("test/download")
-    public void  testDownLoadFile(String filePath , HttpServletResponse response){
-        COSObject cosObject = cosManager.getObject(filePath);
-        COSObjectInputStream cosObjectInput = cosObject.getObjectContent();
+    public void testDownLoadFile(String filePath, HttpServletResponse response) throws IOException {
+        COSObjectInputStream cosObjectInput = null;
+
         try {
+            COSObject cosObject = cosManager.getObject(filePath);
+            cosObjectInput = cosObject.getObjectContent();
             byte[] byteArray = IOUtils.toByteArray(cosObjectInput);
             // 设置相应头
             response.setContentType("application/octet-stream;charset=UTF-8");
@@ -82,7 +84,13 @@ public class FileController {
             response.getOutputStream().write(byteArray);
             response.getOutputStream().flush();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error("file download error, filepath = " + filePath, e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "文件下载失败");
+        } finally {
+            // 释放流
+            if (cosObjectInput != null) {
+                cosObjectInput.close();
+            }
         }
 
 

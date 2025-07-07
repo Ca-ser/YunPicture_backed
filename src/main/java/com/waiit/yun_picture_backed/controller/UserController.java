@@ -2,8 +2,8 @@ package com.waiit.yun_picture_backed.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.waiit.yun_picture_backed.annotation.AuthCHeck;
-import com.waiit.yun_picture_backed.common.BasieResponse;
+import com.waiit.yun_picture_backed.annotation.AuthCheck;
+import com.waiit.yun_picture_backed.common.BaseResponse;
 import com.waiit.yun_picture_backed.common.DeleteRequest;
 import com.waiit.yun_picture_backed.common.ResultUtils;
 import com.waiit.yun_picture_backed.constant.UserConstant;
@@ -35,7 +35,7 @@ public class UserController {
      */
     @PostMapping("/regisier")
     @ResponseBody
-    public BasieResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
         Long registerResult = userService.userRegister(userRegisterRequest);
         return ResultUtils.success(registerResult);
@@ -49,7 +49,7 @@ public class UserController {
      */
     @PostMapping("/login")
     @ResponseBody
-    public BasieResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<LoginUserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(userLoginRequest == null, ErrorCode.PARAMS_ERROR);
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
@@ -63,7 +63,7 @@ public class UserController {
      * @return 脱敏后的用户信息
      */
     @GetMapping("/get/lgoin")
-    public BasieResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
+    public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         return ResultUtils.success(userService.getloginUserVO(loginUser));
     }
@@ -75,7 +75,7 @@ public class UserController {
      */
     @PostMapping("/logout")
     @ResponseBody
-    public BasieResponse<Boolean> userLogout(HttpServletRequest request) {
+    public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
         if (request == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求为空");
         }
@@ -87,10 +87,10 @@ public class UserController {
      * @param userAddRequest 用户添加请求
      * @return  脱敏后的用户信息
      */
-    @AuthCHeck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/adduser")
     @ResponseBody
-    public BasieResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
+    public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest) {
         if (userAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求为空");
         }
@@ -112,9 +112,9 @@ public class UserController {
      * @param id 用户id
      * @return 用户信息
      */
-    @AuthCHeck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @GetMapping("/get")
-    public BasieResponse<User> getUserById(@RequestParam Long id) {
+    public BaseResponse<User> getUserById(@RequestParam Long id) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
         }
@@ -129,8 +129,8 @@ public class UserController {
      * @return 脱敏后的用户信息
      */
     @GetMapping("/get/vo")
-    public BasieResponse<UserVO> getUserVOById(@RequestParam Long id) {
-        BasieResponse<User> userById = getUserById(id);
+    public BaseResponse<UserVO> getUserVOById(@RequestParam Long id) {
+        BaseResponse<User> userById = getUserById(id);
         User user = userById.getData();
         return ResultUtils.success(userService.getUserVO(user));
         
@@ -141,9 +141,9 @@ public class UserController {
      * @param deleteRequest 删除用户请求
      * @return 返回结果
      */
-    @AuthCHeck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/delete")
-    public BasieResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest) {
+    public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest) {
         if (deleteRequest == null && deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -156,9 +156,9 @@ public class UserController {
      * @param userUpdateRequest 更新用户信息请求
      * @return 返回结果
      */
-    @AuthCHeck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/update")
-    public BasieResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest){
+    public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest){
         if (userUpdateRequest == null && userUpdateRequest.getId() <= 0){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -174,9 +174,9 @@ public class UserController {
      * @param userQueryRequest
      * @return 返回用户列表
      */
-    @AuthCHeck(mustRole = UserConstant.ADMIN_ROLE)
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/list/page/vo")
-    public BasieResponse<Page<UserVO>> listUserVoByPage(@RequestBody UserQueryRequest userQueryRequest){
+    public BaseResponse<Page<UserVO>> listUserVoByPage(@RequestBody UserQueryRequest userQueryRequest){
         ThrowUtils.throwIf(userQueryRequest == null,ErrorCode.PARAMS_ERROR);
         long current = userQueryRequest.getCurrent();
         int pageSize = userQueryRequest.getPageSize();
