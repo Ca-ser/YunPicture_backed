@@ -7,19 +7,24 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.waiit.yun_picture_backed.exception.BusinessException;
 import com.waiit.yun_picture_backed.exception.ErrorCode;
 import com.waiit.yun_picture_backed.exception.ThrowUtils;
 import com.waiit.yun_picture_backed.manager.FileManager;
 import com.waiit.yun_picture_backed.model.dto.file.UploadPictureResult;
 import com.waiit.yun_picture_backed.model.dto.picture.PictureQueryRequest;
+import com.waiit.yun_picture_backed.model.dto.picture.PictureReviewRequest;
 import com.waiit.yun_picture_backed.model.dto.picture.PictureUploadRequest;
 import com.waiit.yun_picture_backed.model.entity.Picture;
 import com.waiit.yun_picture_backed.model.entity.User;
+import com.waiit.yun_picture_backed.model.enums.PictureReviewStatusEnum;
 import com.waiit.yun_picture_backed.model.vo.PictureVO;
 import com.waiit.yun_picture_backed.model.vo.UserVO;
 import com.waiit.yun_picture_backed.service.PictureService;
 import com.waiit.yun_picture_backed.mapper.PictureMapper;
 import com.waiit.yun_picture_backed.service.UserService;
+import jdk.jfr.internal.instrument.ThrowableTracer;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -208,6 +213,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     /**
      * 校验图片
+     *
      * @param picture
      */
     @Override
@@ -225,6 +231,33 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (StrUtil.isNotBlank(introduction)) {
             ThrowUtils.throwIf(introduction.length() > 800, ErrorCode.PARAMS_ERROR, "简介过长");
         }
+    }
+
+    @Override
+    public void doPictureReview(PictureReviewRequest pictureReviewRequest,User loginUser) {
+        // 校验参数
+        ThrowUtils.throwIf(pictureReviewRequest == null, ErrorCode.PARAMS_ERROR, "审核数据为空");
+        Long id = pictureReviewRequest.getId();
+        Integer reviewStatus = pictureReviewRequest.getReviewStatus();
+        PictureReviewStatusEnum enumByValue = PictureReviewStatusEnum.getEnumByValue(reviewStatus);
+        String reviewMessage = pictureReviewRequest.getReviewMessage();
+        if (id == null || reviewStatus == null || PictureReviewStatusEnum.REVIEWING.equals(enumByValue)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求包参数正确");
+        }
+        // 判断图片是否重复
+        Picture oldPicture = this.getById(id);
+        ThrowUtils.throwIf(oldPicture == null,ErrorCode.NOT_FOUND_ERROR,"图片不存在");
+        // 校验审核装药是否重复
+        if (oldPicture.getReviewStatus().equals(reviewStatus)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"重复审核");
+        }
+        // 操作数据库
+        Picture updatePicture = new Picture();
+        BeanUtils.copyProperties(pictureReviewRequest,updatePicture);
+        updatePicture.setReviewerId(loginUser.getId());
+        updatePicture.setReviewTime(new Date());
+        this.updateById(updatePicture);
+        
     }
 
 

@@ -10,10 +10,7 @@ import com.waiit.yun_picture_backed.constant.UserConstant;
 import com.waiit.yun_picture_backed.exception.BusinessException;
 import com.waiit.yun_picture_backed.exception.ErrorCode;
 import com.waiit.yun_picture_backed.exception.ThrowUtils;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureEditRequest;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureQueryRequest;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureUpdateRequest;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureUploadRequest;
+import com.waiit.yun_picture_backed.model.dto.picture.*;
 import com.waiit.yun_picture_backed.model.entity.Picture;
 import com.waiit.yun_picture_backed.model.entity.User;
 import com.waiit.yun_picture_backed.model.vo.PictureTagCategory;
@@ -196,6 +193,11 @@ public class PictureController {
         return ResultUtils.success(true);
     }
 
+    /**
+     * 分类标签
+     *
+     * @return
+     */
     @GetMapping("/tag_category")
     public BaseResponse<PictureTagCategory> listPictureTagCategory() {
         PictureTagCategory pictureTagCategory = new PictureTagCategory();
@@ -206,4 +208,16 @@ public class PictureController {
         return ResultUtils.success(pictureTagCategory);
     }
 
+    /**
+     * 审核图片
+     */
+    @PostMapping("/review")
+    public BaseResponse<Boolean> PictureReview(@RequestBody PictureReviewRequest pictureReviewRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureReviewRequest== null , ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        pictureService.doPictureReview(pictureReviewRequest,loginUser);
+        return ResultUtils.success(true);
+        
+
+    }
 }

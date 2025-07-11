@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.waiit.yun_picture_backed.model.dto.picture.PictureQueryRequest;
+import com.waiit.yun_picture_backed.model.dto.picture.PictureReviewRequest;
 import com.waiit.yun_picture_backed.model.dto.picture.PictureUploadRequest;
 import com.waiit.yun_picture_backed.model.entity.Picture;
 import com.waiit.yun_picture_backed.model.entity.User;
@@ -27,34 +28,43 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser            登录用户
      * @return 图片信息
      */
-    public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser);
+    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser);
 
     /**
      * 获取查询对象
+     *
      * @param pictureQueryRequest
      * @return
      */
-    public QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+    QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
 
     /**
      * 获取图片包装类
+     *
      * @param picture 图片
      * @param request HTTP请求
      * @return 图片包装类
      */
-    public PictureVO getPictureVO(Picture picture, HttpServletRequest request);
+    PictureVO getPictureVO(Picture picture, HttpServletRequest request);
 
     /**
      * 获取图片包装类（分页）
+     *
      * @param picturePage
      * @param request
      * @return
      */
-    public Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
+    Page<PictureVO> getPictureVOPage(Page<Picture> picturePage, HttpServletRequest request);
 
     /**
      * 校验图片
+     *
      * @param picture
      */
-    public void validPicture(Picture picture);
-}
+    void validPicture(Picture picture);
+
+    /**
+     * 图片审核
+     * */
+    void  doPictureReview(PictureReviewRequest pictureReviewRequest,User loginUser);
+}   
