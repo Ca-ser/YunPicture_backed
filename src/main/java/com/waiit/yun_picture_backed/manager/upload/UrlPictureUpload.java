@@ -52,15 +52,15 @@ public class UrlPictureUpload extends PictureUploadTempplete {
         //3. 发送HEAD 校验Url 是否可以访问
         ThrowUtils.throwIf(!(fileUrl.startsWith("http://") || fileUrl.startsWith("https://")),
                 ErrorCode.PARAMS_ERROR, "仅支持 HTTP 或 HTTPS 协议的文件地址");
-        HttpResponse httpHead = null;
+        HttpResponse response = null;
         try {
-            httpHead = HttpUtil.createRequest(Method.HEAD, fileUrl).execute();
+            response = HttpUtil.createRequest(Method.HEAD, fileUrl).execute();
             // 未能正常返回，无需执行其他判断
-            if (httpHead.getStatus() != HttpStatus.HTTP_OK) {
+            if (response.getStatus() != HttpStatus.HTTP_OK) {
                 return;
             }
             //4. 文件存在, 校验文件类型
-            String contentType = httpHead.header("Content-Type");
+            String contentType = response.header("Content-Type");
             // 不为空校验是否合法
             if (StrUtil.isNotBlank(contentType)) {
                 // 被允许的类型
@@ -69,7 +69,7 @@ public class UrlPictureUpload extends PictureUploadTempplete {
                         ErrorCode.PARAMS_ERROR, "文件类型错误");
             }
             //5. 文件存在, 文件大小校验
-            String contentLengthStr = httpHead.header("Content-Length");
+            String contentLengthStr = response.header("Content-Length");
             if (StrUtil.isNotBlank(contentLengthStr)) {
                 try {
                     long ContentLength = Long.parseLong(contentLengthStr);
@@ -85,8 +85,8 @@ public class UrlPictureUpload extends PictureUploadTempplete {
 
         } finally {
             // 资源释放，当文件不存在时
-            if (httpHead != null) {
-                httpHead.close();
+            if (response != null) {
+                response.close();
             }
 
         }
