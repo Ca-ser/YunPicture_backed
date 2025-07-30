@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.waiit.yun_picture_backed.mapper.PictureMapper">
-    <resultMap id="BaseResultMap" type="generator.domain.Picture">
+    <resultMap id="BaseResultMap" type="com.waiit.yun_picture_backed.model.entity.Picture">
         <id property="id" column="id"/>
         <result property="url" column="url"/>
         <result property="name" column="name"/>

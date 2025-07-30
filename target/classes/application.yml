@@ -10,6 +10,10 @@ spring:
     url: jdbc:mysql://localhost:3306/yum_picture
     username: root
     password: Qwer12345
+  ## 允许上传的最大文件大小
+  servlet:
+    multipart:
+      max-file-size: 10MB
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false # 关闭mybatis驼峰命名法转换

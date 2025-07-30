@@ -23,12 +23,12 @@ public interface PictureService extends IService<Picture> {
     /**
      * 上传图片  可重复上传
      *
-     * @param multipartFile        图片文件
+     * @param inputSource       图片文件
      * @param pictureUploadRequest 图片上传请求
      * @param loginUser            登录用户
      * @return 图片信息
      */
-    PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser);
+    PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser);
 
     /**
      * 获取查询对象
@@ -67,4 +67,9 @@ public interface PictureService extends IService<Picture> {
      * 图片审核
      * */
     void  doPictureReview(PictureReviewRequest pictureReviewRequest,User loginUser);
+    
+    /**
+     * 修改状态
+     * */
+    void fillReviewParams(Picture picture, User loginUser);
 }   
