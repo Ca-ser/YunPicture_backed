@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.waiit.yun_picture_backed.model.dto.picture.PictureQueryRequest;
 import com.waiit.yun_picture_backed.model.dto.picture.PictureReviewRequest;
+import com.waiit.yun_picture_backed.model.dto.picture.PictureUploadByBatchRequest;
 import com.waiit.yun_picture_backed.model.dto.picture.PictureUploadRequest;
 import com.waiit.yun_picture_backed.model.entity.Picture;
 import com.waiit.yun_picture_backed.model.entity.User;
@@ -23,7 +24,7 @@ public interface PictureService extends IService<Picture> {
     /**
      * 上传图片  可重复上传
      *
-     * @param inputSource       图片文件
+     * @param inputSource          图片文件
      * @param pictureUploadRequest 图片上传请求
      * @param loginUser            登录用户
      * @return 图片信息
@@ -65,11 +66,21 @@ public interface PictureService extends IService<Picture> {
 
     /**
      * 图片审核
-     * */
-    void  doPictureReview(PictureReviewRequest pictureReviewRequest,User loginUser);
-    
+     */
+    void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
+
     /**
      * 修改状态
-     * */
+     */
     void fillReviewParams(Picture picture, User loginUser);
+
+    /**
+     * 批量抓取和创建图片
+     *
+     * @param pictureUploadByBatchRequest
+     * @param loginUser
+     * @return 成功创建的图片数
+     */
+    Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
 }   
