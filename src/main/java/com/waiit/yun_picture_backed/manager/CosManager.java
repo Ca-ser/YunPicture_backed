@@ -1,13 +1,18 @@
 package com.waiit.yun_picture_backed.manager;
 
+import cn.hutool.core.io.FileUtil;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.model.*;
 import com.qcloud.cos.model.ciModel.persistence.PicOperations;
 import com.waiit.yun_picture_backed.config.CosClientConfig;
+import org.apache.tomcat.util.http.fileupload.FileUpload;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.security.Key;
+import java.util.ArrayList;
 
 @Component
 public class CosManager {
@@ -51,9 +56,17 @@ public class CosManager {
         PicOperations picOperations = new PicOperations();
         // 返回图片的基本信息
         picOperations.setIsPicInfo(1);
+        ArrayList<PicOperations.Rule> rules = new ArrayList<>();
+        // 图片压缩
+        String webpKey = FileUtil.mainName(key) + ".webp";
+        PicOperations.Rule compressRule = new PicOperations.Rule();
+        compressRule.setRule("imageMogr2/format/webp");
+        compressRule.setBucket(cosClientConfig.getBucket());
+        compressRule.setFileId(webpKey);
+        rules.add(compressRule);
         // 构造处理参数怒
+        picOperations.setRules(rules);
         putObjectRequest.setPicOperations(picOperations);
-
         return cosClient.putObject(putObjectRequest);
     }
 

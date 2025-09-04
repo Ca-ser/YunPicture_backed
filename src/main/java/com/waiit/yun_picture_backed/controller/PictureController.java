@@ -1,7 +1,11 @@
 package com.waiit.yun_picture_backed.controller;
 
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+//import com.github.benmanes.caffeine.cache.Cache;
+//import com.github.benmanes.caffeine.cache.Caffeine;
 import com.waiit.yun_picture_backed.annotation.AuthCheck;
 import com.waiit.yun_picture_backed.common.BaseResponse;
 import com.waiit.yun_picture_backed.common.DeleteRequest;
@@ -16,28 +20,43 @@ import com.waiit.yun_picture_backed.model.entity.User;
 import com.waiit.yun_picture_backed.model.enums.PictureReviewStatusEnum;
 import com.waiit.yun_picture_backed.model.vo.PictureTagCategory;
 import com.waiit.yun_picture_backed.model.vo.PictureVO;
+import com.waiit.yun_picture_backed.service.CacheService;
 import com.waiit.yun_picture_backed.service.PictureService;
 import com.waiit.yun_picture_backed.service.UserService;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/picture")
 public class PictureController {
 
-    private final UserService userService;
-    private final PictureService pictureService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private PictureService pictureService;
 
-    public PictureController(UserService userService, PictureService pictureService) {
-        this.userService = userService;
-        this.pictureService = pictureService;
-    }
+    @Autowired
+    private StringRedisTemplate stringredisTemplate;
+
+//    private final Cache<String, String> LOCAL_CACHE =
+//            Caffeine.newBuilder().initialCapacity(1024)
+//                    .maximumSize(10000L)
+//                    // 缓存 5 分钟移除
+//                    .expireAfterWrite(5L, TimeUnit.MINUTES)
+//                    .build();
 
     /**
      * 上传图片  可重复上传
@@ -51,7 +70,9 @@ public class PictureController {
         User loginUser = userService.getLoginUser(request);
         PictureVO pictureVO = pictureService.uploadPicture(multipartFile, pictureUploadRequest, loginUser);
         return ResultUtils.success(pictureVO);
+
     }
+
 
     /**
      * URL上传图片  可重复上传
@@ -157,8 +178,13 @@ public class PictureController {
         //查询数据库
         Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
                 pictureService.getQueryWrapper(pictureQueryRequest));
+        // 判定内容 预防空指针
+        if (picturePage == null){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
         return ResultUtils.success(picturePage);
     }
+
 
     /**
      * 分页获取图片列表
@@ -166,6 +192,7 @@ public class PictureController {
     @PostMapping("/list/page/vo")
     public BaseResponse<Page<PictureVO>> listPictureVOByPage(@RequestBody PictureQueryRequest pictureQueryRequest,
                                                              HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureQueryRequest == null,ErrorCode.NOT_FOUND_ERROR);
         long current = pictureQueryRequest.getCurrent();
         long size = pictureQueryRequest.getPageSize();
         //限制爬虫
@@ -173,12 +200,51 @@ public class PictureController {
         // 普通用户默认智能查看已过审的数据
         pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
         //查询数据库
-        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
-                pictureService.getQueryWrapper(pictureQueryRequest));
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),pictureService.getQueryWrapper(pictureQueryRequest));
+
         //获取封装类
         return ResultUtils.success(pictureService.getPictureVOPage(picturePage, request));
 
     }
+    @Resource
+    private CacheService cacheService;
+    /**
+     * 分页获取图片列表
+     */
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageCache(@RequestBody PictureQueryRequest pictureQueryRequest,
+                                                             HttpServletRequest request) {
+        ThrowUtils.throwIf(pictureQueryRequest == null,ErrorCode.NOT_FOUND_ERROR);
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        //限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        // 普通用户默认智能查看已过审的数据
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+        //构建缓存key
+        String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+        String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
+        String cacheKey = "yunPicture:listPictureVOByPage" + hashKey;
+        // 查询缓存
+        String cacheValue = cacheService.getCache(cacheKey);
+
+        if (cacheValue != null){
+            // 如果缓存命中 直接返回结果
+            Page<PictureVO> cachedPage = JSONUtil.toBean(cacheValue, Page.class);
+            return ResultUtils.success(cachedPage);
+        }
+        //查询数据库
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),pictureService.getQueryWrapper(pictureQueryRequest));
+        //获取封装类
+        Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
+        String inputCacheValue = JSONUtil.toJsonStr(picturePage);
+        Boolean b = cacheService.putCache(inputCacheValue,cacheKey);
+
+        return ResultUtils.success(pictureVOPage);
+
+    }
+
+
 
     /**
      * 编辑图片

@@ -28,6 +28,11 @@ public class Picture {
     private String url;
 
     /**
+     * 图片缩略图
+     */
+    private String ThumbnaiUrl;
+
+    /**
      * 图片名称
      */
     private String name;
