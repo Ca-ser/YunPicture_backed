@@ -1,7 +1,6 @@
 package com.waiit.yun_picture_backed.service.impl;
-
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import generator.domain.Space;
+import com.waiit.yun_picture_backed.model.entity.Space;
 import com.waiit.yun_picture_backed.service.SpaceService;
 import com.waiit.yun_picture_backed.mapper.SpaceMapper;
 import org.springframework.stereotype.Service;

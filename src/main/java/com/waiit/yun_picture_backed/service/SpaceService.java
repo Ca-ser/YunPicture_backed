@@ -1,7 +1,7 @@
 package com.waiit.yun_picture_backed.service;
 
-import generator.domain.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.waiit.yun_picture_backed.model.entity.Space;
 
 /**
 * @author Kane_
