@@ -1,0 +1,5 @@
+# Created at 2025-07-22T14:46:45.476
+Boot Manifest-JAR contains absolute paths in classpath 'D:\project_yun\YunPicture_backed\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+
