@@ -238,7 +238,7 @@ public class PictureController {
         //获取封装类
         Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
         String inputCacheValue = JSONUtil.toJsonStr(picturePage);
-        Boolean b = cacheService.putCache(inputCacheValue,cacheKey);
+        cacheService.putCache(inputCacheValue, cacheKey);
 
         return ResultUtils.success(pictureVOPage);
 
