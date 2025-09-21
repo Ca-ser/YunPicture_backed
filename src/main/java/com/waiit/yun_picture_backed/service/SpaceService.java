@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.waiit.yun_picture_backed.model.dto.space.SpaceAddRequest;
+import com.waiit.yun_picture_backed.model.dto.space.SpaceDeleteRequest;
 import com.waiit.yun_picture_backed.model.dto.space.SpaceQueryRequest;
 import com.waiit.yun_picture_backed.model.entity.Space;
 import com.waiit.yun_picture_backed.model.entity.User;
@@ -61,4 +62,7 @@ public interface SpaceService extends IService<Space> {
     void fillSpaceBySpaceLevel(Space space);
 
     long addSpace(SpaceAddRequest spaceAddRequest, User loginUser);
+
+
+    void deleteSpace(SpaceDeleteRequest spaceDeleteRequest, User loginUser);
 }

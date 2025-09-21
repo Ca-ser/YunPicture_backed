@@ -1,6 +1,7 @@
 package com.waiit.yun_picture_backed.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -9,26 +10,28 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.waiit.yun_picture_backed.exception.BusinessException;
 import com.waiit.yun_picture_backed.exception.ErrorCode;
 import com.waiit.yun_picture_backed.exception.ThrowUtils;
+import com.waiit.yun_picture_backed.model.dto.picture.PictureQueryRequest;
 import com.waiit.yun_picture_backed.model.dto.space.SpaceAddRequest;
+import com.waiit.yun_picture_backed.model.dto.space.SpaceDeleteRequest;
 import com.waiit.yun_picture_backed.model.dto.space.SpaceQueryRequest;
+import com.waiit.yun_picture_backed.model.entity.Picture;
 import com.waiit.yun_picture_backed.model.entity.Space;
 import com.waiit.yun_picture_backed.model.entity.User;
 import com.waiit.yun_picture_backed.model.enums.SpaceLevelEnum;
 import com.waiit.yun_picture_backed.model.vo.SpaceVO;
 import com.waiit.yun_picture_backed.model.vo.UserVO;
+import com.waiit.yun_picture_backed.service.PictureService;
 import com.waiit.yun_picture_backed.service.SpaceService;
 import com.waiit.yun_picture_backed.mapper.SpaceMapper;
 import com.waiit.yun_picture_backed.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +40,7 @@ import java.util.stream.Collectors;
  * @createDate 2025-09-06 22:16:50
  */
 @Service
+@Slf4j
 public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
         implements SpaceService {
 
@@ -45,6 +49,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     private UserService userService;
     @Resource
     private TransactionTemplate transactionTemplate;
+    @Resource
+    private PictureService pictureService;
 
     /**
      * 获取查询对象
@@ -232,6 +238,26 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
             // 返回结果是包装类，可以做一些处理
             return Optional.ofNullable(newSpaceId).orElse(-1L);
         }
+    }
+
+    @Override
+    public void deleteSpace(SpaceDeleteRequest spaceDeleteRequest, User loginUser) {
+        final Long spaceId = spaceDeleteRequest.getSpaceId();
+        transactionTemplate.execute((status -> {
+            // 删除空间
+            ThrowUtils.throwIf(!this.removeById(spaceId),ErrorCode.OPERATION_ERROR,"删除失败");
+            // 删除相关图片
+            PictureQueryRequest pictureQueryRequest = new PictureQueryRequest();
+            pictureQueryRequest.setSpaceId(spaceId);
+            pictureQueryRequest.setUserId(loginUser.getId());
+            QueryWrapper<Picture> pictureVOPage = pictureService.getQueryWrapper(pictureQueryRequest);
+            List<Picture> pictures = pictureService.list(pictureVOPage);
+            if (!CollectionUtil.isEmpty(pictures)){
+                pictureService.removeByIds(pictures.stream().map(Picture::getId).collect(Collectors.toList()));
+                pictures.forEach(pictureService::clearPictureFile);
+            }
+            return null;
+        }));
     }
 
 }

@@ -179,7 +179,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
      * @param pictureId
      * @return
      */
-    private Picture getPicture(User loginUser, UploadPictureResult uploadPictureResult, Long pictureId,Long spaceId) {
+    private Picture getPicture(User loginUser, UploadPictureResult uploadPictureResult, Long pictureId, Long spaceId) {
         Picture picture = new Picture();
         // 补充设置 spaceId
         picture.setSpaceId(spaceId);
@@ -209,19 +209,18 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     }
 
     @Override
-    public void checkPictureAuth(User loginUser, Picture picture){
+    public void checkPictureAuth(User loginUser, Picture picture) {
         Long spaceId = picture.getSpaceId();
-        if (spaceId == null){
-            if (!picture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)){
+        if (spaceId == null) {
+            if (!picture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }
-        }else{
-            if (!picture.getUserId().equals(loginUser.getId())){
+        } else {
+            if (!picture.getUserId().equals(loginUser.getId())) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
             }
         }
     }
-
 
 
     /**
@@ -485,7 +484,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
                 log.error("图片上传失败", e);
                 continue;
             }
-            if (uploadCount >= count){
+            if (uploadCount >= count) {
                 break;
             }
 
@@ -496,6 +495,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
 
     @Resource
     private CosManager cosManager;
+
     @Async
     @Override
     public void clearPictureFile(Picture oldPicture) {
@@ -503,14 +503,14 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         String pictureUrl = oldPicture.getUrl();
         Long count = this.lambdaQuery().eq(Picture::getUrl, pictureUrl).count();
         // 有不止一条记录用到了该图片，不清理
-        if ( count > 1){
+        if (count > 1) {
             return;
         }
         // FIXME 注意，这里的url包含了域名，实际上只要传key值就够了
         cosManager.deleteObject(oldPicture.getUrl());
         // 清理缩略图
         String thumbnaiUrl = oldPicture.getThumbnaiUrl();
-        if (StrUtil.isNotBlank(thumbnaiUrl)){
+        if (StrUtil.isNotBlank(thumbnaiUrl)) {
             cosManager.deleteObject(thumbnaiUrl);
         }
 
@@ -522,7 +522,27 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture oldPicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR, "图片不存在");
         // 校验权限
-        checkPictureAuth(loginUser,oldPicture);
+        checkPictureAuth(loginUser, oldPicture);
+        // 开启事务
+        transactionTemplate.execute(status -> {
+            // 操作数据库
+            boolean result = this.removeById(pictureId);
+            ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+            // 释放额度
+            Long spaceId = oldPicture.getSpaceId();
+            if (spaceId != null) {
+                boolean update = spaceService.lambdaUpdate()
+                        .eq(Space::getId, spaceId)
+                        .setSql("totalSize = totalSize - " + oldPicture.getPicSize())
+                        .setSql("totalCount = totalCount - 1")
+                        .update();
+                ThrowUtils.throwIf(!update, ErrorCode.OPERATION_ERROR, "额度更新失败");
+            }
+            return true;
+        });
+        // 异步清理文件
+        this.clearPictureFile(oldPicture);
+
         // 操作数据库
         boolean result = removeById(pictureId);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -547,9 +567,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         Picture oldPicture = this.getById(id);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         //校验权限
-        checkPictureAuth(loginUser,oldPicture);
+        checkPictureAuth(loginUser, oldPicture);
         // 补充审核参数
-        this.fillReviewParams(picture,loginUser);
+        this.fillReviewParams(picture, loginUser);
         //操作数据库
         boolean result = this.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
