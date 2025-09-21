@@ -13,6 +13,7 @@ public class PictureUpdateRequest implements Serializable {
      */
     private Long id;
 
+
     /**
      * 图片名称
      */

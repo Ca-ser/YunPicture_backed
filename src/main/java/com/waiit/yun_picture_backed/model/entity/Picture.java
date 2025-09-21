@@ -81,7 +81,12 @@ public class Picture {
      * 创建用户 id
      */
     private Long userId;
-    
+
+    /**
+     *  空间 id
+     */
+    private Long SpaceId;
+
     /**
      * 状态：0-待审核; 1-通过; 2-拒绝
      */

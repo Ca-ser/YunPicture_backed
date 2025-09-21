@@ -3,10 +3,7 @@ package com.waiit.yun_picture_backed.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureQueryRequest;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureReviewRequest;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureUploadByBatchRequest;
-import com.waiit.yun_picture_backed.model.dto.picture.PictureUploadRequest;
+import com.waiit.yun_picture_backed.model.dto.picture.*;
 import com.waiit.yun_picture_backed.model.entity.Picture;
 import com.waiit.yun_picture_backed.model.entity.User;
 import com.waiit.yun_picture_backed.model.vo.PictureVO;
@@ -38,6 +35,14 @@ public interface PictureService extends IService<Picture> {
      * @return
      */
     QueryWrapper<Picture> getQueryWrapper(PictureQueryRequest pictureQueryRequest);
+
+
+    /**
+     * 图片校验
+     * @param loginUser
+     * @param picture
+     */
+    void checkPictureAuth(User loginUser, Picture picture);
 
     /**
      * 获取图片包装类
@@ -83,4 +88,23 @@ public interface PictureService extends IService<Picture> {
      */
     Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
 
-}   
+    /**
+     * 图片清理
+     * @param oldPicture
+     */
+    void clearPictureFile(Picture oldPicture);
+
+    /**
+     * 图片删除
+     * @param id
+     * @param loginUser
+     */
+    void deletePicture(Long id, User loginUser);
+
+    /**
+     * 图片编辑
+     * @param pictureEditRequest
+     * @param request
+     */
+    void editPicture(PictureEditRequest pictureEditRequest, HttpServletRequest request);
+}

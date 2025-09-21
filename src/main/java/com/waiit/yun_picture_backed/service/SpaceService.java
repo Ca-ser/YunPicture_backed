@@ -3,8 +3,10 @@ package com.waiit.yun_picture_backed.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.waiit.yun_picture_backed.model.dto.space.SpaceAddRequest;
 import com.waiit.yun_picture_backed.model.dto.space.SpaceQueryRequest;
 import com.waiit.yun_picture_backed.model.entity.Space;
+import com.waiit.yun_picture_backed.model.entity.User;
 import com.waiit.yun_picture_backed.model.vo.SpaceVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -52,6 +54,11 @@ public interface SpaceService extends IService<Space> {
     void validSpace(Space space,boolean add);
 
 
+    /**
+     * 自动填充限额数据
+     * @param space
+     */
+    void fillSpaceBySpaceLevel(Space space);
 
-
+    long addSpace(SpaceAddRequest spaceAddRequest, User loginUser);
 }

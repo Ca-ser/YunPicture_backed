@@ -2,6 +2,7 @@ package com.waiit.yun_picture_backed.manager;
 
 import cn.hutool.core.io.FileUtil;
 import com.qcloud.cos.COSClient;
+import com.qcloud.cos.exception.CosClientException;
 import com.qcloud.cos.model.*;
 import com.qcloud.cos.model.ciModel.persistence.PicOperations;
 import com.waiit.yun_picture_backed.config.CosClientConfig;
@@ -68,6 +69,10 @@ public class CosManager {
         picOperations.setRules(rules);
         putObjectRequest.setPicOperations(picOperations);
         return cosClient.putObject(putObjectRequest);
+    }
+
+    public void deleteObject(String key) throws CosClientException{
+        cosClient.deleteObject(cosClientConfig.getBucket(),key);
     }
 
 

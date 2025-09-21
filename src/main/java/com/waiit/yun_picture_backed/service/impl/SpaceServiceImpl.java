@@ -1,7 +1,6 @@
 package com.waiit.yun_picture_backed.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -10,24 +9,25 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.waiit.yun_picture_backed.exception.BusinessException;
 import com.waiit.yun_picture_backed.exception.ErrorCode;
 import com.waiit.yun_picture_backed.exception.ThrowUtils;
+import com.waiit.yun_picture_backed.model.dto.space.SpaceAddRequest;
 import com.waiit.yun_picture_backed.model.dto.space.SpaceQueryRequest;
-import com.waiit.yun_picture_backed.model.entity.Picture;
 import com.waiit.yun_picture_backed.model.entity.Space;
 import com.waiit.yun_picture_backed.model.entity.User;
 import com.waiit.yun_picture_backed.model.enums.SpaceLevelEnum;
-import com.waiit.yun_picture_backed.model.vo.PictureVO;
 import com.waiit.yun_picture_backed.model.vo.SpaceVO;
 import com.waiit.yun_picture_backed.model.vo.UserVO;
 import com.waiit.yun_picture_backed.service.SpaceService;
 import com.waiit.yun_picture_backed.mapper.SpaceMapper;
 import com.waiit.yun_picture_backed.service.UserService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +43,8 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
     // 装配 服务
     @Resource
     private UserService userService;
+    @Resource
+    private TransactionTemplate transactionTemplate;
 
     /**
      * 获取查询对象
@@ -170,6 +172,68 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
 
     }
+
+    /**
+     * 自动填充 空间限额数据
+     * @param space
+     */
+    @Override
+    public void fillSpaceBySpaceLevel(Space space) {
+        // 根据空间级别，自动填充限额
+        SpaceLevelEnum spaceLevelEnum = SpaceLevelEnum.getEnumByValue(space.getSpaceLevel());
+        if (spaceLevelEnum != null) {
+            long maxSize = spaceLevelEnum.getMaxSize();
+            if (space.getMaxSize() == null) {
+                space.setMaxSize(maxSize);
+            }
+            long maxCount = spaceLevelEnum.getMaxCount();
+            if (space.getMaxCount() == null) {
+                space.setMaxCount(maxCount);
+            }
+        }
+    }
+
+
+    @Override
+    public long addSpace(SpaceAddRequest spaceAddRequest, User loginUser){
+        // 类型转换
+        Space space = new Space();
+        BeanUtils.copyProperties(spaceAddRequest,space);
+
+        // 默认值
+        if (StrUtil.isBlank(spaceAddRequest.getSpaceName())){
+            space.setSpaceName("默认空间");
+        }
+        if (spaceAddRequest.getSpaceLevel() == null){
+            space.setSpaceLevel(SpaceLevelEnum.COMMON.getValue());
+        }
+        // 填充数据
+        this.fillSpaceBySpaceLevel(space);
+        // 数据校验
+        this.validSpace(space,true);
+        Long id = loginUser.getId();
+        space.setUserId(id);
+        // 权限校验
+        if (SpaceLevelEnum.COMMON.getValue() != spaceAddRequest.getSpaceLevel() && !userService.isAdmin(loginUser)){
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限创建指定级别的空间");
+        }
+        // 数据库写入
+        String lock = String.valueOf(id).intern();
+        synchronized (lock){
+            Long newSpaceId = transactionTemplate.execute(status -> {
+                boolean exists = this.lambdaQuery().eq(Space::getUserId, id).exists();
+                ThrowUtils.throwIf(exists,ErrorCode.OPERATION_ERROR,"每个用户只允许一个私有空间");
+                // 写入数据库
+                boolean result = this.save(space);
+                ThrowUtils.throwIf(!result,ErrorCode.OPERATION_ERROR);
+                // 返回新写入的数据 id
+                return space.getId();
+            });
+            // 返回结果是包装类，可以做一些处理
+            return Optional.ofNullable(newSpaceId).orElse(-1L);
+        }
+    }
+
 }
 
 

@@ -6,8 +6,9 @@
     <resultMap id="BaseResultMap" type="com.waiit.yun_picture_backed.model.entity.Picture">
         <id property="id" column="id"/>
         <result property="url" column="url"/>
-        <result property="name" column="name"/>
-        <result property="thumbnailUrl" column="thumbnailUrl"/>
+        <result property="spaceId" column="spaceId" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="thumbnailUrl" column="thumbnailUrl" jdbcType="VARCHAR"/>
         <result property="introduction" column="introduction"/>
         <result property="category" column="category"/>
         <result property="tags" column="tags"/>
